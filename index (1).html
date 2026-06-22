@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Split the Bill Calculator</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --accent: #22d3ee;
+    --accent-2: #a78bfa;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --danger: #f87171;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background: linear-gradient(160deg, #0f172a, #1e1b4b 70%);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 16px 64px;
+  }
+  .wrap { width: 100%; max-width: 560px; }
+  h1 {
+    font-size: 1.8rem;
+    margin-bottom: 4px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .subtitle { color: var(--muted); margin-bottom: 24px; font-size: 0.95rem; }
+  .card {
+    background: var(--card);
+    border: 1px solid #334155;
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+  }
+  label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 6px; margin-top: 16px; }
+  label:first-child { margin-top: 0; }
+  input[type="number"], select {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #334155;
+    background: #0f172a;
+    color: var(--text);
+    font-size: 1rem;
+  }
+  input:focus, select:focus { outline: 2px solid var(--accent); }
+  .row { display: flex; gap: 12px; }
+  .row > div { flex: 1; }
+  .people-list { margin-top: 16px; }
+  .person-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .person-row input[type="text"] {
+    flex: 1;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid #334155;
+    background: #0f172a;
+    color: var(--text);
+  }
+  .remove-btn {
+    background: transparent;
+    border: 1px solid var(--danger);
+    color: var(--danger);
+    border-radius: 8px;
+    padding: 6px 10px;
+    cursor: pointer;
+    font-size: 0.85rem;
+  }
+  .add-btn, .calc-btn {
+    width: 100%;
+    margin-top: 14px;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .add-btn {
+    background: #334155;
+    color: var(--text);
+  }
+  .add-btn:hover { background: #475569; }
+  .calc-btn {
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    color: #0f172a;
+  }
+  .calc-btn:hover { filter: brightness(1.08); }
+  .results { margin-top: 8px; }
+  .result-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #334155;
+    font-size: 0.95rem;
+  }
+  .result-item:last-child { border-bottom: none; }
+  .result-item .amt { color: var(--accent); font-weight: 600; }
+  .total-line {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px dashed #475569;
+    font-weight: 700;
+  }
+  .hf-btn {
+    display: inline-block;
+    margin-top: 28px;
+    padding: 12px 22px;
+    border-radius: 10px;
+    background: #1e293b;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 600;
+    text-align: center;
+  }
+  .hf-btn:hover { background: var(--accent); color: #0f172a; }
+  footer {
+    margin-top: 36px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.85rem;
+    line-height: 1.6;
+  }
+  footer a { color: var(--accent); text-decoration: none; }
+  .center { text-align: center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Split the Bill</h1>
+  <p class="subtitle">Even splits, custom shares, and tip/tax — sorted in seconds.</p>
+
+  <div class="card">
+    <label for="billTotal">Total bill amount (₹)</label>
+    <input type="number" id="billTotal" placeholder="e.g. 1500" min="0" step="0.01">
+
+    <div class="row">
+      <div>
+        <label for="tipPercent">Tip (%)</label>
+        <input type="number" id="tipPercent" placeholder="0" min="0" step="1" value="0">
+      </div>
+      <div>
+        <label for="taxPercent">Tax / GST (%)</label>
+        <input type="number" id="taxPercent" placeholder="0" min="0" step="1" value="0">
+      </div>
+    </div>
+
+    <label for="splitMode">Split mode</label>
+    <select id="splitMode">
+      <option value="equal">Split equally</option>
+      <option value="custom">Custom shares (by amount someone ordered)</option>
+    </select>
+
+    <div class="people-list" id="peopleList"></div>
+    <button class="add-btn" id="addPersonBtn" type="button">+ Add person</button>
+
+    <button class="calc-btn" id="calcBtn" type="button">Calculate split</button>
+  </div>
+
+  <div class="card" id="resultsCard" style="display:none;">
+    <h3 style="margin-top:0;">Result</h3>
+    <div class="results" id="results"></div>
+    <div class="total-line">
+      <span>Total (incl. tip & tax)</span>
+      <span id="grandTotal">₹0.00</span>
+    </div>
+  </div>
+
+  <div class="center">
+    <a class="hf-btn" href="https://digitalheroesco.com" target="_blank" rel="noopener noreferrer">Built for Digital Heroes</a>
+  </div>
+
+  <footer>
+    Made by <strong>Chintan Kansal</strong> — <a href="mailto:chintankansal62@gmail.com">chintankansal62@gmail.com</a><br>
+    Split the Bill Calculator — free tool, no signup required.
+  </footer>
+</div>
+
+<script>
+  const peopleListEl = document.getElementById('peopleList');
+  const splitModeEl = document.getElementById('splitMode');
+  let personCount = 0;
+
+  function addPerson(name = '') {
+    personCount++;
+    const row = document.createElement('div');
+    row.className = 'person-row';
+    row.dataset.id = personCount;
+
+    const nameInput = document.createElement('input');
+    nameInput.type = 'text';
+    nameInput.placeholder = 'Name';
+    nameInput.value = name;
+    nameInput.className = 'person-name';
+
+    const shareInput = document.createElement('input');
+    shareInput.type = 'number';
+    shareInput.placeholder = 'Amount ordered (₹)';
+    shareInput.min = '0';
+    shareInput.step = '0.01';
+    shareInput.className = 'person-share';
+    shareInput.style.display = splitModeEl.value === 'custom' ? 'block' : 'none';
+    shareInput.style.maxWidth = '160px';
+
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'remove-btn';
+    removeBtn.textContent = 'Remove';
+    removeBtn.onclick = () => row.remove();
+
+    row.appendChild(nameInput);
+    row.appendChild(shareInput);
+    row.appendChild(removeBtn);
+    peopleListEl.appendChild(row);
+  }
+
+  document.getElementById('addPersonBtn').addEventListener('click', () => addPerson());
+
+  splitModeEl.addEventListener('change', () => {
+    const showShare = splitModeEl.value === 'custom';
+    document.querySelectorAll('.person-share').forEach(el => {
+      el.style.display = showShare ? 'block' : 'none';
+    });
+  });
+
+  // Start with 2 people by default
+  addPerson('Person 1');
+  addPerson('Person 2');
+
+  function formatCurrency(n) {
+    return '₹' + n.toFixed(2);
+  }
+
+  document.getElementById('calcBtn').addEventListener('click', () => {
+    const billTotal = parseFloat(document.getElementById('billTotal').value);
+    const tipPercent = parseFloat(document.getElementById('tipPercent').value) || 0;
+    const taxPercent = parseFloat(document.getElementById('taxPercent').value) || 0;
+    const mode = splitModeEl.value;
+
+    const resultsCard = document.getElementById('resultsCard');
+    const resultsEl = document.getElementById('results');
+    const grandTotalEl = document.getElementById('grandTotal');
+    resultsEl.innerHTML = '';
+
+    if (isNaN(billTotal) || billTotal <= 0) {
+      resultsCard.style.display = 'block';
+      resultsEl.innerHTML = '<p style="color:#f87171;">Please enter a valid bill total greater than 0.</p>';
+      grandTotalEl.textContent = '';
+      return;
+    }
+
+    const rows = Array.from(document.querySelectorAll('.person-row'));
+    if (rows.length === 0) {
+      resultsCard.style.display = 'block';
+      resultsEl.innerHTML = '<p style="color:#f87171;">Add at least one person.</p>';
+      grandTotalEl.textContent = '';
+      return;
+    }
+
+    const multiplier = 1 + (tipPercent / 100) + (taxPercent / 100);
+    const grandTotal = billTotal * multiplier;
+
+    let people = rows.map(row => ({
+      name: row.querySelector('.person-name').value.trim() || 'Guest',
+      share: parseFloat(row.querySelector('.person-share').value) || 0
+    }));
+
+    resultsCard.style.display = 'block';
+
+    if (mode === 'equal') {
+      const perHead = grandTotal / people.length;
+      people.forEach(p => {
+        const item = document.createElement('div');
+        item.className = 'result-item';
+        item.innerHTML = `<span>${p.name}</span><span class="amt">${formatCurrency(perHead)}</span>`;
+        resultsEl.appendChild(item);
+      });
+    } else {
+      const totalShares = people.reduce((sum, p) => sum + p.share, 0);
+      if (totalShares <= 0) {
+        resultsEl.innerHTML = '<p style="color:#f87171;">Enter the amount each person ordered to use custom split.</p>';
+        grandTotalEl.textContent = '';
+        return;
+      }
+      people.forEach(p => {
+        const portion = (p.share / totalShares) * grandTotal;
+        const item = document.createElement('div');
+        item.className = 'result-item';
+        item.innerHTML = `<span>${p.name} <span style="color:#94a3b8;font-size:0.8rem;">(ordered ${formatCurrency(p.share)})</span></span><span class="amt">${formatCurrency(portion)}</span>`;
+        resultsEl.appendChild(item);
+      });
+    }
+
+    grandTotalEl.textContent = formatCurrency(grandTotal);
+  });
+</script>
+</body>
+</html>
